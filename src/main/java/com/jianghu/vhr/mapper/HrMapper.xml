@@ -154,4 +154,9 @@
   <select id="loadUserByUsername" resultMap="BaseResultMap">
     select * from hr where  username = #{username}
   </select>
+
+  <select id="getRoleById" resultType="com.jianghu.vhr.model.Role">
+    select r.* from role r,hr_role hrr
+    where hrr.`rid`=r.`id` and hrr.`hrid`=#{id}
+  </select>
 </mapper>

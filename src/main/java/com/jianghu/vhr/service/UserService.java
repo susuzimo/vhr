@@ -20,6 +20,7 @@ public class UserService implements UserDetailsService {
         if(hr==null){
             throw new UsernameNotFoundException("用户名不存在");
         }
+        hr.setRoles(hrMapper.getRoleById(hr.getId()));
         return hr;
     }
 }

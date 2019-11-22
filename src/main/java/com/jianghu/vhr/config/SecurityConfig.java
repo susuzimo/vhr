@@ -4,12 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jianghu.vhr.model.Hr;
 import com.jianghu.vhr.model.RespBean;
 import com.jianghu.vhr.service.UserService;
+import com.sun.org.apache.xalan.internal.xsltc.dom.FilterIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.*;
+import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -32,6 +35,10 @@ public class SecurityConfig  extends WebSecurityConfigurerAdapter {
 
     @Autowired
     UserService userService;
+    @Autowired
+    MyFilter myFilter;
+    @Autowired
+    MyDecisionManager myDecisionManager;
 
     @Bean
     PasswordEncoder passwordEncoder(){
@@ -46,10 +53,23 @@ public class SecurityConfig  extends WebSecurityConfigurerAdapter {
 
 
     @Override
+    public void configure(WebSecurity web) {
+        web.ignoring().antMatchers("/login");
+    }
+
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .anyRequest()
-                .authenticated()
+//                .anyRequest()
+//                .authenticated()
+                .withObjectPostProcessor(new ObjectPostProcessor<FilterSecurityInterceptor>() {
+                    @Override
+                    public <O extends FilterSecurityInterceptor> O postProcess(O object) {
+                        object.setAccessDecisionManager(myDecisionManager);
+                        object.setSecurityMetadataSource(myFilter);
+                        return object;
+                    }
+                })
                 .and()
                 .formLogin().
                 loginPage("/login").
