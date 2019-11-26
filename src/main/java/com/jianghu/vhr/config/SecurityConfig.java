@@ -19,6 +19,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -136,7 +137,21 @@ public class SecurityConfig  extends WebSecurityConfigurerAdapter {
                     }
                 })
                 .permitAll()
-                .and().csrf().disable() ;
+                .and().csrf().disable().exceptionHandling().authenticationEntryPoint(new AuthenticationEntryPoint() {
+            @Override
+            public void commence(HttpServletRequest req, HttpServletResponse resp, AuthenticationException e) throws IOException, ServletException {
+                resp.setContentType("application/json;charset=utf-8");
+                PrintWriter out = resp.getWriter();
+                RespBean respBean=RespBean.error("访问失败");
+                if (e instanceof InsufficientAuthenticationException) {
+                    respBean.setMsg("尚未登录，请登录!");
+                }
+                ObjectMapper om = new ObjectMapper();
+                out.write(om.writeValueAsString(respBean));
+                out.flush();
+                out.close();
+            }
+        }) ;
     }
 
 
